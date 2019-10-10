@@ -122,4 +122,3 @@ cIndexUnP[2] <- mean(cIndexeS1,na.rm=TRUE)
 
 
 saveRDS(cIndexUnP, file = paste0(disease,"_SDS_computingCluster_seed",i,".rds"))
-
