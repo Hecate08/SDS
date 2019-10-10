@@ -106,5 +106,4 @@ for(weightUnp in weights){
   cIndexe[((weightUnp*10)-(10*fro))+1,2] = mean(cIndexeS1,na.rm=TRUE)
 }
 
-
 saveRDS(cIndexe, file = paste0(disease,"_SDSC_computingCluster_seed",i,".rds"))
