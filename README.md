@@ -10,11 +10,12 @@ R packages:
 * survcomp
 * matrixStats
 
-Data sets
+Data sets (order of subjects have to match in all 3 datasets)
 * survival data in form of: OVERALL.SURVIVAL, overall.survival.indicator
 * gene expression data already filtered and normalized
 * clinical data with dummy variables for categorical variables
-order of subjects have to match in all 3 datasets
+
+
 
 
 
