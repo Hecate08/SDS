@@ -1,0 +1,14 @@
+Package: SDS
+Title: Survival Distance Score
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Lisa",
+           family = "Name",
+           role = c("aut", "cre"),
+           email = "lneums@kumc.edu",
+           comment = c(ORCID = "https://orcid.org/0000-0002-9249-6300"))
+Description: What the package does (one paragraph).
+License: What license it uses
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 6.1.1
