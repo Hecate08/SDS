@@ -16,7 +16,7 @@ Data sets (order of subjects have to match in all 3 datasets)
 * clinical data (data.frame) with dummy variables for categorical variables
 
 ## Example workflow
-An example how to use the package can be found in Example.html.
+An example how to use the package can be found in Example.pdf
 
 ## Citation
 The paper can be found at this location: 
