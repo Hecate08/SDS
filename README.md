@@ -15,12 +15,11 @@ Data sets (order of subjects have to match in all 3 datasets)
 * gene expression data (matrix) already filtered and normalized
 * clinical data (data.frame) with dummy variables for categorical variables
 
-
-
-
+## Example workflow
+An example how to use the package can be found in Example.html.
 
 ## Citation
-
+The paper can be found at this location: 
 
 ## Acknowledgments
 
