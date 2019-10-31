@@ -19,7 +19,7 @@ Data sets (order of subjects have to match in all 3 datasets)
 An example how to use the package can be found in Example.pdf
 
 ## Citation
-The paper can be found at this location: 
+The paper can be found at this location: [preprint of paper submitted to and accepted by PSB 2020]{https://www.researchgate.net/publication/336927617_Improving_survival_prediction_using_a_novel_feature_selection_and_feature_reduction_framework_based_on_the_integration_of_clinical_and_molecular_data}
 
 ## Acknowledgments
 
