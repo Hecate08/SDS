@@ -1,0 +1,152 @@
+---
+title: "SDS example workflow"
+output:
+  pdf_document: default
+  html_document: default
+date: "October 31, 2019"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pathL = "S:/Biostats/BIO-STAT/Jeffrey Thompson/GRA/Neums/Projects/SurvivalOmics/results/TCGA/lung/"
+```
+
+
+Here we present an example to use the package using a the public available TCGA lung cancer data set (TCGA-LUAD).
+
+## Prerequisites
+
+### R libraries
+
+```s
+library(survival)
+#install.packages("glmnet")
+library(glmnet)
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+#  install.packages("BiocManager")
+#BiocManager::install("survcomp", version = "3.8")
+library(survcomp)
+library(matrixStats)
+library(SDS)
+```
+
+```{r include=FALSE}
+library(survival)
+#install.packages("glmnet")
+library(glmnet)
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+#  install.packages("BiocManager")
+#BiocManager::install("survcomp", version = "3.8")
+library(survcomp)
+library(matrixStats)
+library(SDS)
+```
+
+### Data sets (order of subjects have to match in all 3 datasets)
+
+* survival data (data.frame) in form of: OVERALL.SURVIVAL, overall.survival.indicator
+* gene expression data (matrix) already filtered and normalized
+* clinical data (data.frame) with dummy variables for categorical variables
+
+```{r }
+filteredExp_lung = readRDS(file = paste0(pathL,"filteredExp_lung"))
+filteredClin_lung = readRDS(file = paste0(pathL,"filteredClin_dummy_lung"))
+surv_lung = readRDS(file = paste0(pathL,"survival_lung"))
+
+```
+
+### Variables
+
+Here we set up variables to run the code later. It is avaisable to split the data into training and testing data set and validate the builded model later on the testing data. Here we split them up 2:1 for training:testing
+```{r}
+corrT = 0.6 # threshold for pairwise correlation
+top = 75 # number of selected best performing attributes
+weight = 1.3 # weight for scoreC in combination with scoreS
+
+# setting a random seed
+set.seed(10) 
+# number of subjects in training set
+trainingSize = floor((dim(surv_lung)[1]/3)*2) 
+# subject names in training set
+training <- sample(rownames(surv_lung), size = trainingSize) 
+# subject names in test set
+test <- rownames(surv_lung)[!(rownames(surv_lung) %in% training)] 
+
+# survival object for training set
+survObjectTraining <- Surv(surv_lung[training,]$OVERALL.SURVIVAL,
+                           surv_lung[training,]$overall.survival.indicator)   
+
+```
+
+## Feature Selection
+
+### Deriving the scores for feature selection
+
+The survival distance score (scoreS) and the clinical distance score (scoreC) are both build on the training set.
+```{r}
+scoreS = get_score_s(attrib = filteredExp_lung[,training], 
+                      surv = surv_lung[training,])
+scoreC = get_score_c(attrib = filteredExp_lung[,training], 
+                      clin = filteredClin_lung[training,])
+
+scoreS[1:5]
+scoreC[1:5]
+```
+
+### picking the best performing attributes
+
+```{r}
+score_combo = combine_scores(scoreS = scoreS, scoreC = scoreC, weight = weight)
+topGenes = names(sort(score_combo, decreasing = TRUE))[1:top]
+score_combo[1:5]
+```
+
+## Feature Reduction
+
+To do the feature selection we reduce the attribute matrix to only the training or testing set and the top selected genes. The returned list entails the meta feature for the training set and the test set.
+
+```{r}
+at_train = t(filteredExp_lung[topGenes,training]) 
+at_test = t(filteredExp_lung[topGenes,test])
+
+meta_features = build_meta_features(attrib_training = at_train, attrib_test = at_test, 
+                                    corrT = corrT, top = top, scores = score_combo)
+meta_features$training[1:5,1:5]
+meta_features$test[1:5,1:5]
+```
+
+
+## Risk Prediction
+To do the risk prediction we use the ridge regression provided by the package glmnet. The return value of the risk score function is a list for the training set and the test set with one meta feature per subject.
+```{r}
+dataTraining <- meta_features$training
+dataTest <- meta_features$test
+riskScoreList <- get_risk_score(features_training = dataTraining, 
+                                features_test = dataTest, 
+                                survObject_training = survObjectTraining)
+riskScoreList$training[1:5]
+riskScoreList$test[1:5]
+```
+
+## Model building and validation
+Here, we create a new training data set with the clinical variables and the risk score derived in the previous step. With those data we fit a cox proportional hazards model. We validate the model with the test set and concordance index (C-index) as metric.
+```{r}
+data_int_Training <- data.frame(filteredClin_lung[training,], 
+                                riskScore = riskScoreList$training)
+data_int_Test <- data.frame(filteredClin_lung[test,], 
+                            riskScore = riskScoreList$test)
+
+
+cfit <- coxph(survObjectTraining ~ ., data_int_Training)
+
+predTest <- predict(object = cfit, newdata = data_int_Test, type = "lp")
+cindex_valid = concordance.index(predTest, 
+                                surv.time = surv_lung[test,]$OVERALL.SURVIVAL,
+                                surv.event = surv_lung[test,]$overall.survival.indicator, 
+                                method = "noether")
+cIndex = cindex_valid$c.index
+
+cIndex
+
+```
+
