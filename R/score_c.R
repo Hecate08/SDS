@@ -8,7 +8,7 @@
 #' @export
 #' @examples
 #' Score2Function()
-Score_C <- function(attrib,clin){
+score_c <- function(attrib,clin){
   lenE = dim(attrib)[1]
   R2adj = rep(NA,lenE)
   for(f in 1:lenE){
