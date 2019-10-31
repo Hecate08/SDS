@@ -11,7 +11,7 @@
 
 
 
-<meta name="date" content="2019-10-30" />
+<meta name="date" content="2019-10-31" />
 
 <title>SDS example workflow</title>
 
@@ -178,7 +178,7 @@ summary {
 
 
 <h1 class="title toc-ignore">SDS example workflow</h1>
-<h4 class="date">October 30, 2019</h4>
+<h4 class="date">October 31, 2019</h4>
 
 </div>
 
@@ -216,13 +216,18 @@ surv_lung = readRDS(file = paste0(pathL,&quot;survival_lung&quot;))</code></pre>
 top = 75 # number of selected best performing attributes
 weight = 1.3 # weight for scoreC in combination with scoreS
 
-set.seed(10) # setting a random seed
-trainingSize = floor((dim(surv_lung)[1]/3)*2) # number of subjects in training set
-training &lt;- sample(rownames(surv_lung), size = trainingSize) # subject names in training set
-test &lt;- rownames(surv_lung)[!(rownames(surv_lung) %in% training)] # subject names in test set
+# setting a random seed
+set.seed(10) 
+# number of subjects in training set
+trainingSize = floor((dim(surv_lung)[1]/3)*2) 
+# subject names in training set
+training &lt;- sample(rownames(surv_lung), size = trainingSize) 
+# subject names in test set
+test &lt;- rownames(surv_lung)[!(rownames(surv_lung) %in% training)] 
 
+# survival object for training set
 survObjectTraining &lt;- Surv(surv_lung[training,]$OVERALL.SURVIVAL,
-                           surv_lung[training,]$overall.survival.indicator) # survival object for training set  </code></pre>
+                           surv_lung[training,]$overall.survival.indicator)   </code></pre>
 </div>
 </div>
 <div id="feature-selection" class="section level2">
@@ -230,8 +235,10 @@ survObjectTraining &lt;- Surv(surv_lung[training,]$OVERALL.SURVIVAL,
 <div id="deriving-the-scores-for-feature-selection" class="section level3">
 <h3>Deriving the scores for feature selection</h3>
 <p>The survival distance score (scoreS) and the clinical distance score (scoreC) are both build on the training set.</p>
-<pre class="r"><code>scoreS = Score_S_Function(attrib = filteredExp_lung[,training], surv = surv_lung[training,])
-scoreC = Score_C_Function(attrib = filteredExp_lung[,training], clin = filteredClin_lung[training,])
+<pre class="r"><code>scoreS = get_score_s(attrib = filteredExp_lung[,training], 
+                      surv = surv_lung[training,])
+scoreC = get_score_c(attrib = filteredExp_lung[,training], 
+                      clin = filteredClin_lung[training,])
 
 scoreS[1:5]</code></pre>
 <pre><code>##  ENSG00000000005.5  ENSG00000001084.9 ENSG00000001626.13 
@@ -246,7 +253,7 @@ scoreS[1:5]</code></pre>
 </div>
 <div id="picking-the-best-performing-attributes" class="section level3">
 <h3>picking the best performing attributes</h3>
-<pre class="r"><code>score_combo = scoreCombination(scoreS = scoreS, scoreC = scoreC, weight = weight)
+<pre class="r"><code>score_combo = combine_scores(scoreS = scoreS, scoreC = scoreC, weight = weight)
 topGenes = names(sort(score_combo, decreasing = TRUE))[1:top]
 score_combo[1:5]</code></pre>
 <pre><code>##  ENSG00000000005.5  ENSG00000001084.9 ENSG00000001626.13 
@@ -261,8 +268,8 @@ score_combo[1:5]</code></pre>
 <pre class="r"><code>at_train = t(filteredExp_lung[topGenes,training]) 
 at_test = t(filteredExp_lung[topGenes,test])
 
-meta_features = corrGroupFilter(attrib_training = at_train, attrib_test = at_test, corrT = corrT, 
-                                top = top, scores = score_combo)
+meta_features = build_meta_features(attrib_training = at_train, attrib_test = at_test, 
+                                    corrT = corrT, top = top, scores = score_combo)
 meta_features$training[1:5,1:5]</code></pre>
 <pre><code>##                   [,1]      [,2]      [,3]      [,4]      [,5]
 ## TCGA-NJ-A4YG -5.419433 -7.004395 -7.004395 -7.004395 -2.249508
@@ -283,8 +290,9 @@ meta_features$training[1:5,1:5]</code></pre>
 <p>To do the risk prediction we use the ridge regression provided by the package glmnet. The return value of the risk score function is a list for the training set and the test set with one meta feature per subject.</p>
 <pre class="r"><code>dataTraining &lt;- meta_features$training
 dataTest &lt;- meta_features$test
-riskScoreList &lt;- meanRiskScoreFunction(features_training = dataTraining, features_test = dataTest, 
-                                       survObject_training = survObjectTraining)
+riskScoreList &lt;- get_risk_score(features_training = dataTraining, 
+                                features_test = dataTest, 
+                                survObject_training = survObjectTraining)
 riskScoreList$training[1:5]</code></pre>
 <pre><code>## [1] 0.1029184 0.1653081 0.1551549 0.1546220 0.1412030</code></pre>
 <pre class="r"><code>riskScoreList$test[1:5]</code></pre>
@@ -293,17 +301,20 @@ riskScoreList$training[1:5]</code></pre>
 <div id="model-building-and-validation" class="section level2">
 <h2>Model building and validation</h2>
 <p>Here, we create a new training data set with the clinical variables and the risk score derived in the previous step. With those data we fit a cox proportional hazards model. We validate the model with the test set and concordance index (C-index) as metric.</p>
-<pre class="r"><code>data_int_Training &lt;- data.frame(filteredClin_lung[training,], riskScore = riskScoreList$training)
-data_int_Test &lt;- data.frame(filteredClin_lung[test,], riskScore = riskScoreList$test)
+<pre class="r"><code>data_int_Training &lt;- data.frame(filteredClin_lung[training,], 
+                                riskScore = riskScoreList$training)
+data_int_Test &lt;- data.frame(filteredClin_lung[test,], 
+                            riskScore = riskScoreList$test)
 
 
 cfit &lt;- coxph(survObjectTraining ~ ., data_int_Training)
 
 predTest &lt;- predict(object = cfit, newdata = data_int_Test, type = &quot;lp&quot;)
-cindex_validation = concordance.index(predTest, surv.time = surv_lung[test,]$OVERALL.SURVIVAL,
-                                          surv.event = surv_lung[test,]$overall.survival.indicator, 
-                                          method = &quot;noether&quot;)
-cIndex = cindex_validation$c.index
+cindex_valid = concordance.index(predTest, 
+                                surv.time = surv_lung[test,]$OVERALL.SURVIVAL,
+                                surv.event = surv_lung[test,]$overall.survival.indicator, 
+                                method = &quot;noether&quot;)
+cIndex = cindex_valid$c.index
 
 cIndex</code></pre>
 <pre><code>## [1] 0.6993773</code></pre>
