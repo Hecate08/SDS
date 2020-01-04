@@ -16,7 +16,7 @@ Data sets (order of subjects have to match in all 3 datasets)
 * clinical data (data.frame) with dummy variables for categorical variables
 
 ## Example workflow
-An example how to use the package can be found in Example.pdf
+An example how to use the package can be found in [Example.pdf](https://github.com/Hecate08/SDS/blob/master/Example.pdf)
 
 ## Citation
 The paper can be found at this location: [Proceedings of Pacific Symposium on Biocomputing (PSB) 2020](https://psb.stanford.edu/psb-online/proceedings/psb20/Neums.pdf)
