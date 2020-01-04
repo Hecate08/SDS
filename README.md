@@ -20,6 +20,7 @@ An example how to use the package can be found in Example.pdf
 
 ## Citation
 The paper can be found at this location: [Proceedings of PSB 2020](https://psb.stanford.edu/psb-online/proceedings/psb20/Neums.pdf)
+
 Citation: Improving Survival Prediction Using a Novel Feature Selection and Feature Reduction Framework Based on the Integration of Clinical and Molecular Data; Lisa Neums, Richard Meier, Devin C. Koestler, Jeffrey A. Thompson; Pacific Symposium on Biocomputing 25:415-426(2020)
 
 ## Acknowledgments
