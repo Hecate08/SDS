@@ -19,7 +19,8 @@ Data sets (order of subjects have to match in all 3 datasets)
 An example how to use the package can be found in Example.pdf
 
 ## Citation
-The paper can be found at this location: [preprint of paper submitted to and accepted by PSB 2020](https://www.researchgate.net/publication/336927617_Improving_survival_prediction_using_a_novel_feature_selection_and_feature_reduction_framework_based_on_the_integration_of_clinical_and_molecular_data)
+The paper can be found at this location: [Proceedings of PSB 2020](https://psb.stanford.edu/psb-online/proceedings/psb20/Neums.pdf)
+Citation: Improving Survival Prediction Using a Novel Feature Selection and Feature Reduction Framework Based on the Integration of Clinical and Molecular Data; Lisa Neums, Richard Meier, Devin C. Koestler, Jeffrey A. Thompson; Pacific Symposium on Biocomputing 25:415-426(2020)
 
 ## Acknowledgments
 
